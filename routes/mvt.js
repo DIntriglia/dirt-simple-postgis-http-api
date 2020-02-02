@@ -13,6 +13,8 @@ const sql = (params, query) => {
   
   FROM (
     SELECT
+      id,
+      properties,
       ${query.columns ? `${query.columns},` : ''}
       ST_AsMVTGeom(
         ST_Transform(${query.geom_column}, 3857),
@@ -24,7 +26,9 @@ const sql = (params, query) => {
     FROM (
       SELECT
         ${query.columns ? `${query.columns},` : ''}
+        id::text AS id,
         ${query.geom_column},
+        prop AS properties,
         srid
       FROM 
         ${params.table},
@@ -105,8 +109,6 @@ module.exports = function(fastify, opts, next) {
             error: 'Internal Server Error',
             message: 'unable to connect to database server'
           })
-
-        if (!('columns' in request.query)) request.query['columns'] = 'prop';
 
         client.query(sql(request.params, request.query), function onResult(
           err,

@@ -19,23 +19,17 @@ const sql = (params, query) => {
 
   FROM (
     SELECT 
+      id::text AS id,
       'Feature' AS type, 
       St_asgeojson(ST_Transform(lg.${query.geom_column}, 4326))::json AS geometry,
-      ${query.columns ? ` 
-      Row_to_json(
         (
           SELECT 
-            l 
-          FROM   
-         (SELECT ${query.columns}) AS l
+            prop AS properties
         )
-      ) AS properties 
-      ` : `'{}'::json AS properties`}
                 
     FROM   
       ${params.table} AS lg
       ${bounds ? `, (SELECT ST_SRID(${query.geom_column}) as srid FROM ${params.table} LIMIT 1) sq` : ''}
-      
     
     -- Optional Filter
     ${query.filter || bounds ? 'WHERE' : ''}
@@ -102,8 +96,6 @@ module.exports = function (fastify, opts, next) {
           "error": "Internal Server Error",
           "message": "unable to connect to database server"
         })
-
-        if (!('columns' in request.query)) request.query['columns'] = 'prop';
 
         client.query(
           sql(request.params, request.query),
