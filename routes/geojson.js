@@ -103,6 +103,8 @@ module.exports = function (fastify, opts, next) {
           "message": "unable to connect to database server"
         })
 
+        if (!('columns' in request.query)) request.query['columns'] = 'prop';
+
         client.query(
           sql(request.params, request.query),
           function onResult(err, result) {
